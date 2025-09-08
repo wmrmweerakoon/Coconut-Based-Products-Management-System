@@ -1,6 +1,5 @@
 // src/pages/BecomeSupplier.js
 import React, { useState } from 'react';
-import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
 import '../App.css';
 
@@ -28,7 +27,6 @@ const BecomeSupplier = () => {
 
   return (
     <div>
-      <Navbar />
       <div className="supplier-form-container">
         <h2>Become a Supplier</h2>
         <form onSubmit={handleSubmit}>

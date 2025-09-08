@@ -25,8 +25,12 @@ const deliverySchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Out for Delivery', 'Delivered'],
-        default: 'Pending'
+        enum: ['pending', 'out-for-delivery', 'delivered'],
+        default: 'pending'
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
     }
 });
 

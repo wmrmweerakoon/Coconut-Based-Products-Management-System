@@ -6,17 +6,24 @@
   "scripts": {
     "start": "node server.js",
     "server": "nodemon server.js",
+    "contact": "nodemon backend/contactServer.js",
+    "register": "nodemon backend/registerServer.js",
     "client": "npm start --prefix frontend",
-    "dev": "concurrently \"npm run server\" \"npm run client\""
+    "dev": "concurrently \"npm run server\" \"npm run contact\" \"npm run register\" \"npm run client\""
   },
+  "keywords": [],
+  "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.2",
     "concurrently": "^9.1.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.5.0",
     "express": "^4.21.2",
-    "mongoose": "^8.12.1"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.13.3",
+    "nodemon": "^3.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

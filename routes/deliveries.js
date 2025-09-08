@@ -90,18 +90,21 @@ router.route("/update-status/:id").put(async (req, res) => {
 
 
 router.route("/email/:email").get(async (req, res) => {
-  const email = req.params.email;
+    const email = req.params.email;
 
-  try {
-      const delivery = await Delivery.findOne({ Email: email });
-      if (!delivery) {
-          return res.status(404).send({ status: "Delivery not found" });
-      }
-      res.status(200).send({ status: "Delivery fetched", delivery });
-  } catch (err) {
-      console.error("Error fetching delivery by email:", err);
-      res.status(500).send({ status: "Error with fetching delivery", error: err.message });
-  }
+    try {
+        const delivery = await Delivery.findOne({ 
+            Email: { $regex: new RegExp('^' + email + '$', 'i') } 
+        });
+        
+        if (!delivery) {
+            return res.status(404).send({ status: "Delivery not found" });
+        }
+        res.status(200).send({ status: "Delivery fetched", delivery });
+    } catch (err) {
+        console.error("Error fetching delivery by email:", err);
+        res.status(500).send({ status: "Error with fetching delivery", error: err.message });
+    }
 });
 
 module.exports = router;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { FaPlus, FaEdit, FaTrash, FaTruck, FaSpinner, FaArrowLeft, FaExchangeAlt } from 'react-icons/fa';
+import '../styles/CRUDDeliveries.css';
 
 const CRUDDeliveries = () => {
   const [deliveries, setDeliveries] = useState([]);
@@ -12,32 +13,59 @@ const CRUDDeliveries = () => {
     address: "",
     postalCode: "",
   });
-  const [editId, setEditId] = useState(null); // Track the ID of the delivery being edited
+  const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  // Fetch all delivery records
   useEffect(() => {
     fetchDeliveries();
   }, []);
 
   const fetchDeliveries = async () => {
+    setLoading(true);
+    setError("");
     try {
       const response = await axios.get("http://localhost:8070/delivery/");
       setDeliveries(response.data);
     } catch (err) {
+      setError("Failed to fetch deliveries. Please try again.");
       console.error("Error fetching deliveries:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission (Create or Update)
+  const validateForm = () => {
+    if (!formData.name.trim()) return "Name is required";
+    if (!formData.email.trim()) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return "Invalid email format";
+    if (!formData.phone.trim()) return "Phone number is required";
+    if (!/^\d{10}$/.test(formData.phone.replace(/[^0-9]/g, ''))) return "Invalid phone number format";
+    if (!formData.address.trim()) return "Address is required";
+    if (!formData.postalCode.trim()) return "Postal code is required";
+    if (!/^\d{5}$/.test(formData.postalCode)) return "Invalid postal code format";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setFormLoading(true);
+    setError("");
+    setSuccess("");
 
     const deliveryData = {
       name: formData.name,
@@ -49,24 +77,22 @@ const CRUDDeliveries = () => {
 
     try {
       if (editId) {
-        // Update existing delivery
         await axios.put(`http://localhost:8070/delivery/update/${editId}`, deliveryData);
-        alert("Delivery updated successfully!");
+        setSuccess("Delivery updated successfully!");
       } else {
-        // Create new delivery
         await axios.post("http://localhost:8070/delivery/add", deliveryData);
-        alert("Delivery added successfully!");
+        setSuccess("Delivery added successfully!");
       }
-      fetchDeliveries(); // Refresh the list
-      setFormData({ name: "", email: "", phone: "", address: "", postalCode: "" }); // Clear form
-      setEditId(null); // Reset edit mode
+      fetchDeliveries();
+      resetForm();
     } catch (err) {
+      setError(err.response?.data?.message || "Error saving delivery. Please try again.");
       console.error("Error saving delivery:", err);
-      alert("Error saving delivery: " + err.message);
+    } finally {
+      setFormLoading(false);
     }
   };
 
-  // Handle edit button click
   const handleEdit = (delivery) => {
     setFormData({
       name: delivery.name,
@@ -75,119 +101,192 @@ const CRUDDeliveries = () => {
       address: delivery.Delivery_Address,
       postalCode: delivery.Postal_Code,
     });
-    setEditId(delivery._id); // Set the ID of the delivery being edited
+    setEditId(delivery._id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Handle delete button click
   const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this delivery?")) return;
+
+    setLoading(true);
+    setError("");
     try {
       await axios.delete(`http://localhost:8070/delivery/delete/${id}`);
-      alert("Delivery deleted successfully!");
-      fetchDeliveries(); // Refresh the list
+      setSuccess("Delivery deleted successfully!");
+      fetchDeliveries();
     } catch (err) {
+      setError("Error deleting delivery. Please try again.");
       console.error("Error deleting delivery:", err);
-      alert("Error deleting delivery: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="crud-deliveries-container">
-      <h2>Manage Deliveries</h2>
+  const resetForm = () => {
+    setFormData({ name: "", email: "", phone: "", address: "", postalCode: "" });
+    setEditId(null);
+  };
 
-      {/* Form for Create/Update */}
+  return (
+    <div className="crud-container">
+      <button 
+        className="back-button"
+        onClick={() => navigate('/all-deliveries')}
+      >
+        <FaArrowLeft /> Back to All Deliveries
+      </button>
+
+      <h1 className="page-title">
+        <FaTruck /> Manage Deliveries
+      </h1>
+
+      {error && <div className="error-message">{error}</div>}
+      {success && <div className="success-message">{success}</div>}
+
       <form onSubmit={handleSubmit} className="delivery-form">
-        <div className="form-group">
+        <h2 className="add-delivery-title">
+          {editId ? "Edit Delivery" : "Add New Delivery"}
+        </h2>
+        
+        <div className="form-section">
           <label>Name:</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            required
+            placeholder="Enter full name"
+            disabled={formLoading}
           />
         </div>
-        <div className="form-group">
+
+        <div className="form-section">
           <label>Email:</label>
           <input
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            required
+            placeholder="Enter email address"
+            disabled={formLoading}
           />
         </div>
-        <div className="form-group">
+
+        <div className="form-section">
           <label>Phone Number:</label>
           <input
             type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            required
+            placeholder="Enter phone number"
+            disabled={formLoading}
           />
         </div>
-        <div className="form-group">
+
+        <div className="form-section">
           <label>Delivery Address:</label>
-          <textarea
+          <input
+            type="text"
             name="address"
             value={formData.address}
             onChange={handleChange}
-            required
-          ></textarea>
+            placeholder="Enter delivery address"
+            disabled={formLoading}
+          />
         </div>
-        <div className="form-group">
+
+        <div className="form-section">
           <label>Postal Code:</label>
           <input
             type="text"
             name="postalCode"
             value={formData.postalCode}
             onChange={handleChange}
-            required
+            placeholder="Enter postal code"
+            disabled={formLoading}
           />
         </div>
-        <button type="submit" className="submit-btn">
-          {editId ? "Update Delivery" : "Add Delivery"}
+
+        <button type="submit" className="submit-button" disabled={formLoading}>
+          {formLoading ? (
+            <>
+              <FaSpinner className="spinner" /> Saving...
+            </>
+          ) : editId ? (
+            <>
+              <FaEdit /> Update Delivery
+            </>
+          ) : (
+            <>
+              <FaPlus /> Add Delivery
+            </>
+          )}
         </button>
       </form>
 
-      {/* Table to display deliveries */}
-      <table className="delivery-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th>Postal Code</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deliveries.map((delivery) => (
-            <tr key={delivery._id}>
-              <td>{delivery.name}</td>
-              <td>{delivery.Email}</td>
-              <td>{delivery.phoneNumber}</td>
-              <td>{delivery.Delivery_Address}</td>
-              <td>{delivery.Postal_Code}</td>
-              <td>
-                <button
-                  onClick={() => handleEdit(delivery)}
-                  className="edit-btn"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(delivery._id)}
-                  className="delete-btn"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="table-container">
+        <h3>Delivery Records</h3>
+        {loading ? (
+          <div className="loading-container">
+            <FaSpinner className="spinner" />
+            <p>Loading deliveries...</p>
+          </div>
+        ) : deliveries.length === 0 ? (
+          <div className="no-data-message">
+            <p>No deliveries found. Add your first delivery using the form above.</p>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="delivery-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Address</th>
+                  <th>Postal Code</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deliveries.map((delivery) => (
+                  <tr key={delivery._id}>
+                    <td>{delivery.name}</td>
+                    <td>{delivery.Email}</td>
+                    <td>{delivery.phoneNumber}</td>
+                    <td>{delivery.Delivery_Address}</td>
+                    <td>{delivery.Postal_Code}</td>
+                    <td className="action-buttons">
+                      <button
+                        onClick={() => handleEdit(delivery)}
+                        className="edit-btn"
+                        title="Edit delivery"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(delivery._id)}
+                        className="delete-btn"
+                        title="Delete delivery"
+                      >
+                        <FaTrash />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/update-delivery-status/${delivery._id}`)}
+                        className="status-btn"
+                        title="Update status"
+                      >
+                        <FaExchangeAlt />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -44,6 +44,7 @@ const UpdateDeliveryStatus = () => {
                         <option value="Pending">Pending</option>
                         <option value="Out for Delivery">Out for Delivery</option>
                         <option value="Delivered">Delivered</option>
+                        <option value="return">Return</option>
                     </select>
                 </div>
                 <button type="submit" className="update-status-btn">

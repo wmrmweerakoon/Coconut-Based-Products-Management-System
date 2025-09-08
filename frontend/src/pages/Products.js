@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from '../Components/ProductCard';
-import Navbar from '../Components/Navbar';
 import Footer from '../Components/Footer';
 import '../App.css';
 
@@ -26,7 +25,6 @@ const Products = () => {
 
   return (
     <div>
-      <Navbar />
       <section className="product-section">
         {products.map((product) => (
           <ProductCard

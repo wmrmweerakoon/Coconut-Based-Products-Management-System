@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../Components/Navbar';
 import Hero from '../Components/Hero';
 import ProductCard from '../Components/ProductCard';
 import Footer from '../Components/Footer';
@@ -21,7 +20,6 @@ const Home = () => {
 
   return (
     <div>
-      <Navbar />
       <Hero />
       <section className="product-section">
         {products.map((product) => (
